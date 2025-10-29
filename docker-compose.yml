@@ -1,0 +1,46 @@
+name: devopstask2
+
+services:
+  app_blue:
+    container_name: app_blue
+    image: nginxdemos/hello
+    environment:
+      - APP_POOL=blue
+      - PORT=3000
+      - RELEASE_ID=blue-v1
+    ports:
+      - "8081:3000"
+
+  app_green:
+    container_name: app_green
+    image: nginxdemos/hello
+    environment:
+      - APP_POOL=green
+      - PORT=3000
+      - RELEASE_ID=green-v1
+    ports:
+      - "8082:3000"
+
+  nginx:
+    container_name: nginx
+    image: nginx:stable-alpine
+    depends_on:
+      - app_blue
+      - app_green
+    environment:
+      - ACTIVE_POOL=blue
+      - BLUE_IMAGE=nginxdemos/hello
+      - GREEN_IMAGE=nginxdemos/hello
+      - PORT=3000
+      - RELEASE_ID_BLUE=blue-v1
+      - RELEASE_ID_GREEN=green-v1
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf.tmpl:/etc/nginx/conf.d/default.conf.tmpl:ro
+      - ./nginx/nginx-start.sh:/usr/local/bin/nginx-start.sh:ro
+    entrypoint: ["/bin/sh", "/usr/local/bin/nginx-start.sh"]
+
+networks:
+  default:
+    driver: bridge
